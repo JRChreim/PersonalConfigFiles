@@ -68,6 +68,34 @@ is_simulation_running() {
     [ -n "$running_jobs" ] && return 0 || return 1
 }
 
+# this will be used to check the appropriate error (which must not be due to time limit)
+# is_simulation_running() {
+#     local simulation_name=$1  # First argument: the simulation name to match
+#     local user_name=$USER     # Current user
+
+#     # Get the filtered list of jobs
+#     running_jobs=$(qstat -fxw | grep -E "Job_Name|Job Id|Job_Owner|Exit_status" | sed -E 's/(Job_Owner = [^@]+).*/\1/' | awk -v sim_name="$simulation_name" -v user="$user_name" '
+#     BEGIN {
+#         job_id = ""
+#         job_name = ""
+#         job_owner = ""
+#         exit_status = ""
+#     }
+#     /Job Id/ {job_id = $3}
+#     /Job_Name/ {job_name = $3}
+#     /Job_Owner/ {job_owner = $3}
+#     /Exit_status/ {exit_status = $3}
+#     {
+#         # If job_name matches simulation_name and job_owner matches user, print job details
+#         if (job_name == sim_name && job_owner ~ user) {
+#             print "Job_Id:", job_id, "Job_Name:", job_name, "Job_Owner:", job_owner, "Exit_Status:", exit_status
+#         }
+#     }')
+
+#     # If running_jobs is not empty, return success; otherwise, return failure
+#     [ -n "$running_jobs" ] && return 0 || return 1
+# }
+
 # get maximum number of time-steps from input file
 get_max_number() {
     max_number=$(python3 -c "
@@ -171,7 +199,7 @@ if [ ! -d "$SimFold" ]; then
         # if the simulation is not running, we submit it
         echo "Simulation $IF is not running. Checking for errors in the output file..."  
         
-        check_simulation_errors "$IF.out"
+        check_simulation_errors "$FoldVar$IF.out"
 
         if [ $? -ne 0 ]; then
             echo "Stopping the script due to errors. Check your simulation parameters. Exiting..."
@@ -195,7 +223,7 @@ else
     # if the simulation is not running, we submit it
     echo "Folder $FoldVar exists. Checking for errors in the output file..."  
     
-    check_simulation_errors "$IF.out"
+    check_simulation_errors "$FoldVar$IF.out"
 
     if [ $? -ne 0 ]; then
         echo "Stopping the script due to errors. Check your simulation parameters. Exiting..."
@@ -255,7 +283,7 @@ else
                     # if the simulation is not running, we submit it
                     echo "Simulation $IF is not running. Checking for errors in the output file..."  
         
-                    check_simulation_errors "$IF.out"
+                    check_simulation_errors "$FoldVar$IF.out"
 
                     if [ $? -ne 0 ]; then
                         echo "Stopping the script due to errors. Check your simulation parameters. Exiting..."
